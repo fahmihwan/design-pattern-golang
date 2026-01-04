@@ -108,12 +108,12 @@ func provideServices(container *dig.Container) {
 
 func provideHandler(container *dig.Container) {
 	// 1) provide semua sub-handler (nanti tinggal tambah baris di sini)
-	// if err := container.Provide(handler.NewUserHandler); err != nil {
-	// 	panic(fmt.Sprintf("Failed to provide UserHandler: %v", err))
-	// }
-	// if err := container.Provide(handler.NewBookHandler); err != nil {
-	// 	panic(fmt.Sprintf("Failed to provide UserHandler: %v", err))
-	// }
+	if err := container.Provide(handler.NewUserHandler); err != nil {
+		panic(fmt.Sprintf("Failed to provide UserHandler: %v", err))
+	}
+	if err := container.Provide(handler.NewBookHandler); err != nil {
+		panic(fmt.Sprintf("Failed to provide UserHandler: %v", err))
+	}
 
 	// 2) provide agregator HandlerInteface (isi field-fieldnya dari DI)
 	if err := container.Provide(func(

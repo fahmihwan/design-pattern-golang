@@ -16,6 +16,7 @@ type BookRepository struct {
 }
 
 type BookRepo interface {
+	Create(ctx context.Context, book *model.Book) error
 	List(ctx context.Context, filter FilterBook) (res []*model.Book, total int, err error)
 	setFilter(db *gorm.DB, filter FilterBook) *gorm.DB
 }
@@ -37,6 +38,15 @@ type FilterBook struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
+}
+
+func (r *BookRepository) Create(ctx context.Context, book *model.Book) error {
+
+	err := r.db.WithContext(ctx).Create(book).Error
+	if err != nil {
+		return fmt.Errorf("failed to create form: %w", err)
+	}
+	return nil
 }
 
 func (r *BookRepository) List(ctx context.Context, filter FilterBook) (res []*model.Book, total int, err error) {

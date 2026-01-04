@@ -2,9 +2,11 @@ package handler
 
 import (
 	"best-pattern/internal/middleware"
+	"best-pattern/internal/request"
 	"best-pattern/internal/response"
 	"best-pattern/internal/service"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -40,6 +42,24 @@ func (h *BookHandler) Routes() http.Handler {
 
 	return r
 
+}
+
+func (h *BookHandler) CreateForm(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var req = new(request.BookRequest)
+	if err := request.ParseForm(r, req); err != nil {
+		middleware.HandleValidationErrors(err, w)
+		return
+	}
+
+	book := req.ToBook()
+	createBook, err := h.bookService.CreateBook(ctx, book)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error creating form: %v", err), http.StatusInternalServerError)
+	}
+	response := response.NewSuccessResponse(createBook)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *BookHandler) ListBook(w http.ResponseWriter, r *http.Request) {
