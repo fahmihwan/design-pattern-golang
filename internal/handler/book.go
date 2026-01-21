@@ -38,13 +38,13 @@ func (h *BookHandler) Routes() http.Handler {
 		return middleware.AuditMiddleware(action, resourceType, getResourceID)
 	}
 
-	r.With(auditMiddleware("/list-book", "book")).Get("/", h.ListBook)
-
+	r.With(auditMiddleware("list-book", "book")).Get("/", h.ListBook)
+	r.With(auditMiddleware("create-book", "book")).Post("/", h.CreateBook)
 	return r
 
 }
 
-func (h *BookHandler) CreateForm(w http.ResponseWriter, r *http.Request) {
+func (h *BookHandler) CreateBook(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var req = new(request.BookRequest)
 	if err := request.ParseForm(r, req); err != nil {
@@ -56,6 +56,7 @@ func (h *BookHandler) CreateForm(w http.ResponseWriter, r *http.Request) {
 	createBook, err := h.bookService.CreateBook(ctx, book)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error creating form: %v", err), http.StatusInternalServerError)
+		return
 	}
 	response := response.NewSuccessResponse(createBook)
 	w.WriteHeader(http.StatusCreated)
@@ -71,17 +72,19 @@ func (h *BookHandler) ListBook(w http.ResponseWriter, r *http.Request) {
 	orderBy := r.URL.Query().Get("order_by")
 	search := r.URL.Query().Get("search")
 
+	// Set up filters
 	filters := make(map[string]string)
 	filters["name"] = r.URL.Query().Get("name")
 
 	page, err := strconv.Atoi(pageStr)
+	// Parse page and limit
 	if err != nil {
-		page = 10
+		page = 1 // Default to page 1 if parsing fails
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		limit = 1
+		limit = 10 //Default to limit of 10 if parsing fails
 	}
 
 	books, total, err := h.bookService.ListBook(ctx, filters, search, page, limit, sortBy, orderBy)

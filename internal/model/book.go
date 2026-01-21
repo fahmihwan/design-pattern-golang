@@ -1,9 +1,11 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type Book struct {
-	ID          string     `gorm:"primaryKey"`
+	ID          int64      `gorm:"primaryKey;autoIncrement" json:"id"`
 	Title       string     `gorm:"type:varchar(255);not null"`
 	Author      string     `gorm:"type:varchar(255);not null"`
 	Description *string    `gorm:"type:text" json:"description,omitempty"`
