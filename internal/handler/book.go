@@ -40,6 +40,8 @@ func (h *BookHandler) Routes() http.Handler {
 
 	r.With(auditMiddleware("list-book", "book")).Get("/", h.ListBook)
 	r.With(auditMiddleware("create-book", "book")).Post("/", h.CreateBook)
+	r.With(auditMiddleware("get-book", "book")).Get("/{id}", h.GetBook)
+	r.With(auditMiddleware("update-book", "book")).Put("/{id}", h.UpdateBook)
 	return r
 
 }
@@ -108,4 +110,53 @@ func (h *BookHandler) ListBook(w http.ResponseWriter, r *http.Request) {
 	successResponse := response.NewSuccessResponseWithPagination(books, pagination)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(successResponse)
+}
+
+func (h *BookHandler) GetBook(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id := chi.URLParam(r, "id")
+
+	book, err := h.bookService.GetBookByID(ctx, id)
+	if err != nil {
+		response := response.NewErrorResponse(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	successResponse := response.NewSuccessResponse(book)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(successResponse)
+}
+
+func (h *BookHandler) UpdateBook(w http.ResponseWriter, r *http.Request) {
+	// Implementation for updating a book
+	ctx := r.Context()
+
+	var req = new(request.BookRequest)
+	if err := request.ParseForm(r, req); err != nil {
+		middleware.HandleValidationErrors(err, w)
+		return
+	}
+	ids := chi.URLParam(r, "id")
+	book := req.ToBook()
+	id, err := strconv.ParseInt(ids, 10, 64)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	book.ID = id
+
+	updatedBook, err := h.bookService.UpdateBook(ctx, book)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error updating book: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	response := response.NewSuccessResponse(updatedBook)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+
 }

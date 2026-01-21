@@ -14,6 +14,8 @@ var _ BookServiceInteface = &BookService{}
 type BookServiceInteface interface {
 	ListBook(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.Book, int, error)
 	CreateBook(ctx context.Context, book *model.Book) (*model.Book, error)
+	GetBookByID(ctx context.Context, id string) (*model.Book, error)
+	UpdateBook(ctx context.Context, book *model.Book) (*model.Book, error)
 }
 
 type BookService struct {
@@ -61,4 +63,22 @@ func (s *BookService) ListBook(ctx context.Context, filters map[string]string, s
 
 	return books, total, nil
 
+}
+
+func (s *BookService) GetBookByID(ctx context.Context, id string) (*model.Book, error) {
+
+	book, err := s.repo.Book.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get book by ID: %w", err)
+	}
+	return book, nil
+}
+
+func (s *BookService) UpdateBook(ctx context.Context, book *model.Book) (*model.Book, error) {
+	book.UpdatedAt = time.Now()
+	err := s.repo.Book.Update(ctx, book)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update form: %w", err)
+	}
+	return book, nil
 }
