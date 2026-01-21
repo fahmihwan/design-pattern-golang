@@ -42,6 +42,7 @@ func (h *BookHandler) Routes() http.Handler {
 	r.With(auditMiddleware("create-book", "book")).Post("/", h.CreateBook)
 	r.With(auditMiddleware("get-book", "book")).Get("/{id}", h.GetBook)
 	r.With(auditMiddleware("update-book", "book")).Put("/{id}", h.UpdateBook)
+	r.With(auditMiddleware("delete-book", "book")).Delete("/{id}", h.DeleteBook)
 	return r
 
 }
@@ -158,5 +159,22 @@ func (h *BookHandler) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	response := response.NewSuccessResponse(updatedBook)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
 
+func (h *BookHandler) DeleteBook(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+	id := chi.URLParam(r, "id")
+
+	err := h.bookService.DeleteBook(ctx, id)
+	if err != nil {
+		response := response.NewErrorResponse(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	successResponse := response.NewSuccessResponse("Book deleted successfully")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(successResponse)
 }

@@ -21,6 +21,7 @@ type BookRepo interface {
 	setFilter(db *gorm.DB, filter FilterBook) *gorm.DB
 	GetByID(ctx context.Context, id string) (*model.Book, error)
 	Update(ctx context.Context, book *model.Book) error
+	Delete(ctx context.Context, id string) error
 }
 
 var _ BookRepo = (*BookRepository)(nil)
@@ -131,6 +132,14 @@ func (r *BookRepository) Update(ctx context.Context, book *model.Book) error {
 	err := r.db.WithContext(ctx).Save(book).Error
 	if err != nil {
 		return fmt.Errorf("failed to Update form: %w", err)
+	}
+	return nil
+}
+
+func (r *BookRepository) Delete(ctx context.Context, id string) error {
+	err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Book{}).Error
+	if err != nil {
+		return fmt.Errorf("failed to delete form: %w", err)
 	}
 	return nil
 }

@@ -16,6 +16,7 @@ type BookServiceInteface interface {
 	CreateBook(ctx context.Context, book *model.Book) (*model.Book, error)
 	GetBookByID(ctx context.Context, id string) (*model.Book, error)
 	UpdateBook(ctx context.Context, book *model.Book) (*model.Book, error)
+	DeleteBook(ctx context.Context, id string) error
 }
 
 type BookService struct {
@@ -81,4 +82,12 @@ func (s *BookService) UpdateBook(ctx context.Context, book *model.Book) (*model.
 		return nil, fmt.Errorf("failed to update form: %w", err)
 	}
 	return book, nil
+}
+
+func (s *BookService) DeleteBook(ctx context.Context, id string) error {
+	err := s.repo.Book.Delete(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete form: %w", err)
+	}
+	return nil
 }
