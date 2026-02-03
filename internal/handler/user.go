@@ -37,6 +37,7 @@ func (h *UserHandler) Routes() http.Handler {
 
 	r.With(auditMiddleware("list", "user")).Get("/", h.ListUser)
 	r.With(auditMiddleware("create-user", "user")).Post("/", h.UserRegister)
+	r.With(auditMiddleware("user-login", "user")).Post("/login", h.UserLogin)
 	return r
 }
 
@@ -47,6 +48,7 @@ func (h *UserHandler) ListUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
+
 	ctx := r.Context()
 	var req = new(request.UserRegisterRequest)
 	if err := request.ParseForm(r, req); err != nil {
@@ -64,4 +66,28 @@ func (h *UserHandler) UserRegister(w http.ResponseWriter, r *http.Request) {
 	response := response.NewSuccessResponse(createUser)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
+}
+
+func (h *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+	var req = new(request.UserLoginRequest)
+
+	if err := request.ParseForm(r, req); err != nil {
+		middleware.HandleValidationErrors(err, w)
+		return
+	}
+
+	user, err := h.userService.Login(ctx, req.Email, req.Password)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	resp := response.NewSuccessResponse(user)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(resp)
+
 }

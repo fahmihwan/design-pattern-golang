@@ -43,3 +43,21 @@ func (r *UserRegisterRequest) ToUser() *model.User {
 		Password: r.Password,
 	}
 }
+
+// LOGIN
+type UserLoginRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
+
+func (r *UserLoginRequest) parse(req *multipart.Form) {
+	values := req.Value
+
+	r.Email = strings.ToLower(strings.TrimSpace(getStringFrom(values["email"])))
+	r.Password = strings.TrimSpace(getStringFrom(values["password"]))
+}
+
+func (r *UserLoginRequest) validate() error {
+	validate := validator.New()
+	return validate.Struct(r)
+}

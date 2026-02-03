@@ -14,6 +14,7 @@ var _ UserServiceInterface = &UserService{}
 
 type UserServiceInterface interface {
 	Register(ctx context.Context, user *model.User) (*model.User, error)
+	Login(ctx context.Context, email, password string) (*model.User, error)
 }
 
 type UserService struct {
@@ -56,4 +57,20 @@ func (s *UserService) Register(ctx context.Context, user *model.User) (*model.Us
 	}
 
 	return user, nil
+}
+
+func (s *UserService) Login(ctx context.Context, email, password string) (*model.User, error) {
+
+	user, err := s.repo.User.FindByEmail(ctx, email)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check user : %w", err)
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(password)); err != nil {
+		return nil, fmt.Errorf("Invalid email or password")
+	}
+
+	user.Password = nil
+	return user, nil
+
 }
