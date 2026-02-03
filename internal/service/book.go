@@ -5,7 +5,6 @@ import (
 	"best-pattern/internal/repository"
 	"context"
 	"fmt"
-	"log"
 	"time"
 )
 
@@ -34,7 +33,7 @@ func (s *BookService) CreateBook(ctx context.Context, book *model.Book) (*model.
 	// Generate a new UUID for the form
 	book.CreatedAt = time.Now()
 	book.UpdatedAt = time.Now()
-	log.Print(book)
+
 	err := s.repo.Book.Create(ctx, book)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create form: %w", err)

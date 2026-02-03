@@ -4,6 +4,7 @@ import "gorm.io/gorm"
 
 type Repository struct {
 	Book BookRepo
+	User UserRepo
 }
 
 type Pagination struct {
@@ -18,5 +19,6 @@ type Pagination struct {
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{
 		Book: NewBookRepository(db),
+		User: NewUserRepository(db),
 	}
 }
