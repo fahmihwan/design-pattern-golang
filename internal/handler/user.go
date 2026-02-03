@@ -36,7 +36,7 @@ func (h *UserHandler) Routes() http.Handler {
 	}
 
 	r.With(auditMiddleware("list", "user")).Get("/", h.ListUser)
-
+	r.With(auditMiddleware("create-user", "user")).Post("/", h.UserRegister)
 	return r
 }
 

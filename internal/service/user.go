@@ -29,7 +29,7 @@ func NewUserService(repo repository.Repository) *UserService {
 func (s *UserService) Register(ctx context.Context, user *model.User) (*model.User, error) {
 
 	existingUser, err := s.repo.User.FindByEmail(ctx, user.Email)
-	if err != nil {
+	if err == nil {
 		return nil, fmt.Errorf("failed to check if user exists: %w", err)
 	}
 	if existingUser != nil {
@@ -39,13 +39,8 @@ func (s *UserService) Register(ctx context.Context, user *model.User) (*model.Us
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 
-	err = s.repo.User.Create(ctx, user)
-	if err != nil {
-		return nil, fmt.Errorf("failed to register user: %w", err)
-	}
 	if user.Password == nil {
 		return nil, fmt.Errorf("password is required")
-
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(*user.Password), bcrypt.DefaultCost)
