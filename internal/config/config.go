@@ -12,6 +12,11 @@ type Config struct {
 	Port        int    `mapstructure:"PORT"`
 	DatabaseURL string `mapstructure:"DATABASE_URL"`
 	// Storage              StorageConfig
+	JWT struct {
+		Secret    string `mapstructure:"JWT_SECRET"`
+		ExpiryMin int    `mapstructure:"JWT_EXPIRY_MIN"` // menit
+		Issuer    string `mapstructure:"JWT_ISSUER"`
+	} `mapstructure:",squash"`
 }
 
 // type StorageConfig struct {
@@ -26,6 +31,9 @@ func LoadConfig() (*Config, error) {
 	keys := []string{
 		"PORT",
 		"DATABASE_URL",
+		"JWT_SECRET",
+		"JWT_EXPIRY_MIN",
+		"JWT_ISSUER",
 		// "STORAGE_LOGO_PATH",
 		// "STORAGE_BASE_URL",
 	}
@@ -69,6 +77,10 @@ func LoadConfig() (*Config, error) {
 		if err := viper.Unmarshal(&cfg); err != nil {
 			return nil, err
 		}
+	}
+
+	if cfg.JWT.Secret == "" {
+		return nil, fmt.Errorf("JWT_SECRET is required")
 	}
 
 	// Debug: Print the loaded configuration

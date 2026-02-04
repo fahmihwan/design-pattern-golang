@@ -5,6 +5,7 @@ import (
 	"best-pattern/internal/request"
 	"best-pattern/internal/response"
 	"best-pattern/internal/service"
+	"best-pattern/internal/util"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,14 +15,16 @@ import (
 
 type UserHandler struct {
 	userService service.UserServiceInterface
+	jwt         *util.JWTManager
 }
 type UserHandlerInterface interface {
 	Routes() http.Handler
 }
 
-func NewUserHandler(userService service.UserServiceInterface) UserHandlerInterface {
+func NewUserHandler(userService service.UserServiceInterface, jwtManager *util.JWTManager) UserHandlerInterface {
 	return &UserHandler{
 		userService: userService,
+		jwt:         jwtManager,
 	}
 }
 
@@ -85,7 +88,20 @@ func (h *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := response.NewSuccessResponse(user)
+	token, exp, err := h.jwt.Generate(user.ID, user.Email) //tambahkan role jika perlu
+	if err != nil {
+		http.Error(w, "failed to generate token", http.StatusInternalServerError)
+		return
+	}
+
+	payload := response.LoginResponse{
+		User:        user,
+		AccessToken: token,
+		ExpiresAt:   exp,
+		TokenType:   "Bearer",
+	}
+
+	resp := response.NewSuccessResponse(payload)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(resp)

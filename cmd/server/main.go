@@ -5,10 +5,12 @@ import (
 	"best-pattern/internal/handler"
 	"best-pattern/internal/repository"
 	"best-pattern/internal/service"
+	"best-pattern/internal/util"
 	"best-pattern/pkg/database"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/dig"
@@ -36,6 +38,15 @@ func main() {
 		// middleware.InitializeValidator(db)
 	})
 
+	//Provide JWT Manager
+	err = container.Provide(func(cfg *config.Config) *util.JWTManager {
+		exp := time.Duration(cfg.JWT.ExpiryMin) * time.Minute
+		return util.NewJWTManager(cfg.JWT.Secret, cfg.JWT.Issuer, exp)
+	})
+
+	if err != nil {
+		panic(fmt.Sprintf("Failed to provide JWTManager: %v", err))
+	}
 	// ===================================================
 	// Provide router (chi.Mux implements http.Handler)
 	provideRepositories(container)
@@ -129,9 +140,10 @@ func provideHandler(container *dig.Container) {
 	if err := container.Provide(func(
 		BookService *service.BookService,
 		UserService *service.UserService,
+		jwtManager *util.JWTManager,
 	) *handler.HandlerInteface {
 		return &handler.HandlerInteface{
-			UserHandler: handler.NewUserHandler(UserService),
+			UserHandler: handler.NewUserHandler(UserService, jwtManager),
 			BookHandler: handler.NewBookHandler(BookService),
 		}
 	}); err != nil {

@@ -1,0 +1,43 @@
+package middleware
+
+import (
+	"best-pattern/internal/util"
+	"context"
+	"net/http"
+	"strings"
+)
+
+type ctxKey string
+
+const (
+	CtxUserID ctxKey = "user_id"
+	CtxEmail  ctxKey = "email"
+	// CtxRole   ctxKey = "role"
+)
+
+func AuthJWT(jwtm *util.JWTManager) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			h := r.Header.Get("Authorization")
+
+			if h == "" || !strings.HasPrefix(h, "Bearer ") {
+				http.Error(w, "missing authorization token", http.StatusUnauthorized)
+				return
+			}
+
+			tokenString := strings.TrimPrefix(h, "Bearer ")
+			claims, err := jwtm.Verify(tokenString)
+			if err != nil {
+				http.Error(w, "invalid token", http.StatusUnauthorized)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), CtxUserID, claims.UserID)
+			ctx = context.WithValue(ctx, CtxEmail, claims.Email)
+			// ctx = context.WithValue(ctx, CtxRole, claims.Role)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+
+		})
+	}
+}
