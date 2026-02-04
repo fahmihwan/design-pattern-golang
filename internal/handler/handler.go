@@ -1,6 +1,7 @@
 package handler
 
 import (
+	internalMiddleware "best-pattern/internal/middleware"
 	"best-pattern/internal/util"
 	"net/http"
 
@@ -20,7 +21,7 @@ type HandlerInteface struct {
 func NewRouter(handler *HandlerInteface, jwtm *util.JWTManager) *chi.Mux {
 	r := chi.NewRouter()
 
-	// r.Use(internalMiddleware.RateLimitingMiddleware)
+	r.Use(internalMiddleware.RateLimitingMiddleware)
 
 	// isinya banyak routing nanti rencananya
 	r.Route("/user", func(r chi.Router) {
