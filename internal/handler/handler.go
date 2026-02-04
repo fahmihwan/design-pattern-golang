@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"best-pattern/internal/util"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -16,8 +17,10 @@ type HandlerInteface struct {
 	// handler lainnya banyak nanti
 }
 
-func NewRouter(handler *HandlerInteface) *chi.Mux {
+func NewRouter(handler *HandlerInteface, jwtm *util.JWTManager) *chi.Mux {
 	r := chi.NewRouter()
+
+	// r.Use(internalMiddleware.RateLimitingMiddleware)
 
 	// isinya banyak routing nanti rencananya
 	r.Route("/user", func(r chi.Router) {

@@ -144,7 +144,7 @@ func provideHandler(container *dig.Container) {
 	) *handler.HandlerInteface {
 		return &handler.HandlerInteface{
 			UserHandler: handler.NewUserHandler(UserService, jwtManager),
-			BookHandler: handler.NewBookHandler(BookService),
+			BookHandler: handler.NewBookHandler(BookService, jwtManager),
 		}
 	}); err != nil {
 		panic(fmt.Sprintf("Failed to provide HandlerInteface: %v", err))

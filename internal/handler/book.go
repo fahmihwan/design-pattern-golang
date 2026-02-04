@@ -5,6 +5,7 @@ import (
 	"best-pattern/internal/request"
 	"best-pattern/internal/response"
 	"best-pattern/internal/service"
+	"best-pattern/internal/util"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,15 +16,17 @@ import (
 
 type BookHandler struct {
 	bookService service.BookServiceInteface
+	jwt         *util.JWTManager
 }
 
 type BookHandlerInterface interface {
 	Routes() http.Handler
 }
 
-func NewBookHandler(bookService service.BookServiceInteface) BookHandlerInterface {
+func NewBookHandler(bookService service.BookServiceInteface, jwtm *util.JWTManager) BookHandlerInterface {
 	return &BookHandler{
 		bookService: bookService,
+		jwt:         jwtm,
 	}
 }
 
@@ -37,6 +40,8 @@ func (h *BookHandler) Routes() http.Handler {
 	auditMiddleware := func(action, resourceType string) func(http.Handler) http.Handler {
 		return middleware.AuditMiddleware(action, resourceType, getResourceID)
 	}
+
+	r.Use(middleware.AuthJWT(h.jwt))
 
 	r.With(auditMiddleware("list-book", "book")).Get("/", h.ListBook)
 	r.With(auditMiddleware("create-book", "book")).Post("/", h.CreateBook)
